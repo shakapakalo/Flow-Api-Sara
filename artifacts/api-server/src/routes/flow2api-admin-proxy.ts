@@ -11,6 +11,7 @@ const FLOW2API_ADMIN_PREFIXES = [
   "/stats",
   "/logs",
   "/tokens",
+  "/token-refresh",
   "/admin/login",
   "/admin/logout",
   "/admin/change-password",
@@ -38,6 +39,11 @@ function proxyToFlow2API(req: Request, res: Response) {
   const headers: Record<string, string | number> = {
     "content-type": "application/json",
   };
+
+  if (req.headers.authorization) {
+    headers["authorization"] = req.headers.authorization;
+  }
+
   if (bodyStr) {
     headers["content-length"] = Buffer.byteLength(bodyStr);
   }
@@ -54,7 +60,7 @@ function proxyToFlow2API(req: Request, res: Response) {
     const status = proxyRes.statusCode || 200;
     res.status(status);
     Object.entries(proxyRes.headers).forEach(([k, v]) => {
-      if (v) res.setHeader(k, v as string);
+      if (v && k !== "transfer-encoding") res.setHeader(k, v as string);
     });
     proxyRes.pipe(res);
   });
