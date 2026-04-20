@@ -6,6 +6,10 @@ import { requireAdmin } from "../middleware/requireAdmin.js";
 import { PLAN_IDS, getPlan } from "../lib/plans.js";
 import http from "http";
 
+const FLOW2API_PORT = parseInt(process.env.FLOW2API_PORT || "8000", 10);
+const FLOW2API_ADMIN_USER = process.env.FLOW2API_ADMIN_USER || "admin";
+const FLOW2API_ADMIN_PASS = process.env.FLOW2API_ADMIN_PASS || "admin";
+
 const router = Router();
 
 router.get("/admin/users", requireAdmin, async (req, res) => {
@@ -123,9 +127,10 @@ router.get("/admin/stats", requireAdmin, async (req, res) => {
 
     let flow2apiStats = null;
     try {
+      const loginBody = JSON.stringify({ username: FLOW2API_ADMIN_USER, password: FLOW2API_ADMIN_PASS });
       flow2apiStats = await new Promise<unknown>((resolve) => {
         const loginReq = http.request(
-          { hostname: "localhost", port: 5000, path: "/api/login", method: "POST", headers: { "Content-Type": "application/json", "content-length": Buffer.byteLength('{"username":"admin","password":"admin"}') } },
+          { hostname: "localhost", port: FLOW2API_PORT, path: "/api/login", method: "POST", headers: { "Content-Type": "application/json", "content-length": Buffer.byteLength(loginBody) } },
           (loginRes) => {
             const chunks: Buffer[] = [];
             loginRes.on("data", (c: Buffer) => chunks.push(c));
@@ -133,7 +138,7 @@ router.get("/admin/stats", requireAdmin, async (req, res) => {
               try {
                 const { token } = JSON.parse(Buffer.concat(chunks).toString());
                 const statsReq = http.request(
-                  { hostname: "localhost", port: 5000, path: "/api/stats", method: "GET", headers: { Authorization: `Bearer ${token}` } },
+                  { hostname: "localhost", port: FLOW2API_PORT, path: "/api/stats", method: "GET", headers: { Authorization: `Bearer ${token}` } },
                   (statsRes) => {
                     const sc: Buffer[] = [];
                     statsRes.on("data", (c: Buffer) => sc.push(c));
@@ -147,7 +152,7 @@ router.get("/admin/stats", requireAdmin, async (req, res) => {
           }
         );
         loginReq.on("error", () => resolve(null));
-        loginReq.write('{"username":"admin","password":"admin"}');
+        loginReq.write(loginBody);
         loginReq.end();
       });
     } catch { /* ignore */ }
