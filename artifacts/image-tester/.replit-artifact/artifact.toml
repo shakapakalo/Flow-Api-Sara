@@ -29,3 +29,11 @@ to = "/index.html"
 [services.env]
 PORT = "18990"
 BASE_PATH = "/"
+
+[[services]]
+name = "Flow2API"
+paths = [ "/manage", "/v1" ]
+localPort = 8000
+
+[services.development]
+run = "cd /home/runner/workspace/flow2api && python3 main.py"
