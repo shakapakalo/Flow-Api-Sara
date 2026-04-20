@@ -1,0 +1,354 @@
+import { useLocation } from "wouter";
+import { useAuth } from "@/context/AuthContext";
+
+interface Plan {
+  id: string;
+  name: string;
+  price: number;
+  badge?: string;
+  gradient: string;
+  textColor: string;
+  borderColor: string;
+  genLimit: string;
+  threads: number;
+  features: { label: string; included: boolean; note?: string; isNew?: boolean }[];
+}
+
+const PLANS: Plan[] = [
+  {
+    id: "free",
+    name: "Free",
+    price: 0,
+    gradient: "from-zinc-700 to-zinc-800",
+    textColor: "text-zinc-100",
+    borderColor: "border-zinc-600",
+    genLimit: "10 Images · 5 Videos",
+    threads: 1,
+    features: [
+      { label: "Veo 3.0 Model", included: true },
+      { label: "Speed Limit: 1 Thread", included: true },
+      { label: "Text-to-Video", included: true },
+      { label: "Image-to-Video", included: true },
+      { label: "Extend Video", included: false },
+      { label: "First & End Frame", included: false },
+      { label: "Character Consistency 100%", included: false },
+      { label: "Nova Remote Pro", included: false },
+      { label: "Video Resolution: 720p", included: true },
+      { label: "Image Resolution: 1K", included: true },
+      { label: "Image Generation: 10", included: true },
+      { label: "Portrait / Landscape", included: true },
+      { label: "Bulk Generation", included: false },
+    ],
+  },
+  {
+    id: "starter",
+    name: "Starter",
+    price: 1500,
+    gradient: "from-blue-600 to-blue-800",
+    textColor: "text-blue-100",
+    borderColor: "border-blue-500",
+    genLimit: "800",
+    threads: 4,
+    features: [
+      { label: "Veo 3.0 Model", included: true },
+      { label: "Speed Limit: 4 Threads", included: true },
+      { label: "Service Limit: 1 Device", included: true },
+      { label: "Text-to-Video", included: true },
+      { label: "Image-to-Video", included: true },
+      { label: "Extend Video", included: true, isNew: true },
+      { label: "First & End Frame", included: true },
+      { label: "Character Consistency 100%", included: true },
+      { label: "Nova Remote Pro", included: true },
+      { label: "Video Resolution: 720p", included: true },
+      { label: "Image Resolution: 1K", included: true },
+      { label: "Image Generation: 1,000", included: true },
+      { label: "Portrait / Landscape", included: true },
+      { label: "Bulk Generation", included: true },
+      { label: "Veo Prompt AI (after 50)", included: true },
+    ],
+  },
+  {
+    id: "lite",
+    name: "Lite",
+    price: 2500,
+    gradient: "from-cyan-500 to-teal-700",
+    textColor: "text-cyan-100",
+    borderColor: "border-cyan-400",
+    genLimit: "1,500",
+    threads: 4,
+    features: [
+      { label: "Veo 3.0 Model", included: true },
+      { label: "Speed Limit: 4 Threads", included: true },
+      { label: "Service Limit: 1 Device", included: true },
+      { label: "Text-to-Video", included: true },
+      { label: "Image-to-Video", included: true },
+      { label: "Extend Video", included: true, isNew: true },
+      { label: "First & End Frame", included: true },
+      { label: "Character Consistency 100%", included: true },
+      { label: "Nova Remote Pro", included: true },
+      { label: "Video Resolution: 720p", included: true },
+      { label: "Image Resolution: 1K", included: true },
+      { label: "Image Generation: 1,000", included: true },
+      { label: "Portrait / Landscape", included: true },
+      { label: "Bulk Generation", included: true },
+      { label: "Veo Prompt AI (after 50)", included: true },
+    ],
+  },
+  {
+    id: "elite",
+    name: "Elite",
+    price: 3000,
+    badge: "POPULAR",
+    gradient: "from-purple-600 to-violet-800",
+    textColor: "text-purple-100",
+    borderColor: "border-purple-400",
+    genLimit: "2,000",
+    threads: 4,
+    features: [
+      { label: "Veo 3.0 Model", included: true },
+      { label: "Speed Limit: 4 Threads", included: true },
+      { label: "Service Limit: 1 Device", included: true },
+      { label: "Text-to-Video", included: true },
+      { label: "Image-to-Video", included: true },
+      { label: "Extend Video", included: true },
+      { label: "First & End Frame", included: true, isNew: true },
+      { label: "Character Consistency 100%", included: true },
+      { label: "Nova Remote Pro", included: true },
+      { label: "Video Resolution: 720p", included: true },
+      { label: "Image Resolution: 1K", included: true },
+      { label: "Image Generation: 1,000", included: true },
+      { label: "Portrait / Landscape", included: true },
+      { label: "Bulk Generation", included: true },
+      { label: "Veo Prompt AI (after 50)", included: true },
+    ],
+  },
+  {
+    id: "infinity",
+    name: "Infinity",
+    price: 7000,
+    gradient: "from-amber-500 to-orange-700",
+    textColor: "text-amber-100",
+    borderColor: "border-amber-400",
+    genLimit: "Unlimited",
+    threads: 4,
+    features: [
+      { label: "Veo 3.0 Model", included: true },
+      { label: "Speed Limit: 4 Threads", included: true },
+      { label: "Service Limit: 1 Device", included: true },
+      { label: "Text-to-Video", included: true },
+      { label: "Image-to-Video", included: true },
+      { label: "Extend Video", included: true },
+      { label: "First & End Frame", included: true },
+      { label: "Character Consistency 100%", included: true },
+      { label: "Store Banana Pro", included: true },
+      { label: "Video Banana 2", included: true, isNew: true },
+      { label: "Video Resolution: 720p, 4K", included: true },
+      { label: "Image Resolution: 1K, 4K", included: true },
+      { label: "Image Generation: 10,000", included: true },
+      { label: "Portrait / Landscape", included: true },
+      { label: "PDG Add", included: true, isNew: true },
+      { label: "Unlimited Bulk Generation", included: true },
+      { label: "Veo Prompt AI (after 200)", included: true },
+    ],
+  },
+  {
+    id: "infinity_pro",
+    name: "Infinity Pro",
+    price: 15000,
+    gradient: "from-red-600 to-rose-800",
+    textColor: "text-red-100",
+    borderColor: "border-red-400",
+    genLimit: "Unlimited",
+    threads: 8,
+    features: [
+      { label: "Veo 3.0 Model", included: true },
+      { label: "Speed Limit: 8 Threads", included: true },
+      { label: "Service Limit: 1 Device", included: true },
+      { label: "Text-to-Video", included: true },
+      { label: "Image-to-Video", included: true },
+      { label: "Extend Video", included: true },
+      { label: "Image-to-Video (Advanced)", included: true },
+      { label: "Character Consistency 100%", included: true },
+      { label: "Store Banana Pro", included: true },
+      { label: "Video Banana 2", included: true, isNew: true },
+      { label: "Video Resolution: 720p, 4K", included: true },
+      { label: "Image Resolution: 1K, 4K", included: true },
+      { label: "Image Generation: 10,000", included: true },
+      { label: "Portrait / Landscape", included: true },
+      { label: "PDG Add", included: true, isNew: true },
+      { label: "GEO Add", included: true, isNew: true },
+      { label: "Unlimited Bulk Generation", included: true },
+      { label: "Veo Prompt AI (after 200)", included: true },
+    ],
+  },
+];
+
+const SUPER_VEO: Plan = {
+  id: "super_veo",
+  name: "Super VEO",
+  price: 5000,
+  badge: "SPECIAL OFFER",
+  gradient: "from-violet-600 via-purple-600 to-indigo-700",
+  textColor: "text-violet-100",
+  borderColor: "border-violet-400",
+  genLimit: "Unlimited",
+  threads: 4,
+  features: [
+    { label: "Veo 3.0 Model", included: true },
+    { label: "Speed Limit: 4 Threads", included: true },
+    { label: "Text-to-Video", included: true },
+    { label: "Image-to-Video", included: true },
+    { label: "Extend Video", included: true },
+    { label: "First & End Frame", included: true, isNew: true },
+    { label: "Store Banana Pro", included: true },
+    { label: "Image Resolution: 1K", included: true },
+    { label: "Portrait / Landscape", included: true },
+    { label: "Veo Prompt AI (after 50)", included: true },
+    { label: "Bulk Generation", included: true },
+  ],
+};
+
+function CheckIcon({ ok }: { ok: boolean }) {
+  if (ok) return (
+    <svg className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+    </svg>
+  );
+  return (
+    <svg className="w-3.5 h-3.5 text-zinc-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  );
+}
+
+function PlanCard({ plan, currentPlan }: { plan: Plan; currentPlan?: string }) {
+  const isActive = plan.id === currentPlan;
+  return (
+    <div className={`relative rounded-2xl border-2 ${isActive ? "border-white shadow-2xl shadow-white/10 scale-[1.02]" : plan.borderColor + "/40"} bg-gradient-to-b ${plan.gradient} flex flex-col overflow-hidden transition-all`}>
+      {plan.badge && (
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-0.5">
+          <span className="bg-white text-[10px] font-black text-zinc-900 px-3 py-0.5 rounded-full uppercase tracking-widest shadow">{plan.badge}</span>
+        </div>
+      )}
+      {isActive && (
+        <div className="absolute top-2 right-2">
+          <span className="text-[10px] bg-white/20 border border-white/30 text-white px-2 py-0.5 rounded-full font-semibold">Your Plan</span>
+        </div>
+      )}
+      <div className="p-5 pb-3">
+        <p className={`text-xs font-bold uppercase tracking-widest mb-1 ${plan.textColor} opacity-80`}>{plan.name}</p>
+        <div className="flex items-end gap-1 mb-1">
+          <span className="text-xs text-white/60 font-medium">Rs</span>
+          <span className="text-4xl font-black text-white leading-none">{plan.price.toLocaleString()}</span>
+          <span className="text-xs text-white/60 mb-1">/mo</span>
+        </div>
+        <div className="mt-2 mb-3">
+          <span className={`text-xs px-3 py-1 rounded-full font-bold bg-white/20 text-white border border-white/20`}>
+            {plan.genLimit === "Unlimited" ? "✦ Unlimited Generation" : `${plan.genLimit} Video Generations`}
+          </span>
+        </div>
+      </div>
+      <div className="flex-1 px-5 pb-5 space-y-2">
+        {plan.features.map((f) => (
+          <div key={f.label} className={`flex items-center gap-2 ${!f.included ? "opacity-40" : ""}`}>
+            <CheckIcon ok={f.included} />
+            <span className="text-xs text-white/90">{f.label}</span>
+            {f.isNew && f.included && (
+              <span className="text-[9px] bg-rose-500 text-white px-1.5 py-0.5 rounded font-bold uppercase ml-auto">NEW</span>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function Pricing() {
+  const { user } = useAuth();
+  const [, setLocation] = useLocation();
+
+  return (
+    <div className="min-h-screen bg-[#080810] text-zinc-100 font-sans">
+      {/* Header */}
+      <header className="border-b border-zinc-800/60 bg-[#0a0a14]/90 backdrop-blur sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-4">
+          <button onClick={() => setLocation("/")}
+            className="flex items-center gap-1.5 text-zinc-400 hover:text-white text-sm transition-colors">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
+            Back
+          </button>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+            </div>
+            <div>
+              <span className="font-bold text-sm text-white">Flow</span>
+              <span className="font-medium text-sm text-violet-400"> by RSA</span>
+              <span className="text-zinc-500 text-sm"> — Pricing</span>
+            </div>
+          </div>
+          {user && (
+            <div className="ml-auto text-xs text-zinc-500">
+              Current plan: <span className="text-violet-400 font-semibold capitalize">{(user as any).planName || user.plan || "Free"}</span>
+            </div>
+          )}
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 py-10">
+        {/* Title */}
+        <div className="text-center mb-10">
+          <h1 className="text-4xl font-black text-white mb-2">Choose Your Plan</h1>
+          <p className="text-zinc-400 text-sm">Powerful AI image & video generation — pick what fits your needs</p>
+          {user && (
+            <p className="mt-3 text-xs text-zinc-600">Contact admin to upgrade your plan</p>
+          )}
+        </div>
+
+        {/* Main plans grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+          {PLANS.map((plan) => (
+            <PlanCard key={plan.id} plan={plan} currentPlan={(user as any)?.plan} />
+          ))}
+        </div>
+
+        {/* Super VEO special */}
+        <div className="max-w-md mx-auto">
+          <div className={`relative rounded-2xl border-2 ${SUPER_VEO.id === (user as any)?.plan ? "border-white shadow-2xl" : "border-violet-500/60"} bg-gradient-to-br ${SUPER_VEO.gradient} overflow-hidden`}>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-0.5">
+              <span className="bg-white text-[10px] font-black text-zinc-900 px-4 py-0.5 rounded-full uppercase tracking-widest shadow">SPECIAL OFFER</span>
+            </div>
+            <div className="p-6 pt-8 text-center">
+              <p className="text-lg font-black text-white uppercase tracking-widest mb-1">Super VEO</p>
+              <p className="text-xs text-violet-200 mb-3">Text + Ultra Subscription</p>
+              <div className="flex items-end justify-center gap-1 mb-3">
+                <span className="text-sm text-white/60">Rs</span>
+                <span className="text-5xl font-black text-white leading-none">5,000</span>
+                <span className="text-sm text-white/60 mb-1">/mo</span>
+              </div>
+              <div className="mb-5">
+                <span className="text-sm px-4 py-1.5 rounded-full font-bold bg-white/20 text-white border border-white/20">✦ Unlimited Generation</span>
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-left">
+                {SUPER_VEO.features.map((f) => (
+                  <div key={f.label} className="flex items-center gap-2">
+                    <CheckIcon ok={f.included} />
+                    <span className="text-xs text-white/90">{f.label}</span>
+                    {f.isNew && <span className="text-[9px] bg-rose-500 text-white px-1 py-0.5 rounded font-bold">NEW</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer note */}
+        <div className="text-center mt-8 text-xs text-zinc-600">
+          All prices in Pakistani Rupees (PKR) · Contact admin to change your plan
+        </div>
+      </div>
+    </div>
+  );
+}
