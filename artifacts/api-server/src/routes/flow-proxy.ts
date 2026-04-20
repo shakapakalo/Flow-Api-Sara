@@ -8,7 +8,7 @@ import { getPlan } from "../lib/plans.js";
 
 const router: IRouter = Router();
 
-const FLOW2API_PORT = 5000;
+const FLOW2API_PORT = parseInt(process.env.FLOW2API_PORT || "8000", 10);
 const FLOW2API_API_KEY = process.env.FLOW2API_API_KEY || "han1234";
 
 function isVideoModel(modelId: string): boolean {
