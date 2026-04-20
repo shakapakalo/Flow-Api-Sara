@@ -16,7 +16,7 @@ export async function apiLogin(email: string, password: string) {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Login failed");
-  return data as { token: string; user: UserProfile } | { requiresOtp: true; email: string; message?: string };
+  return data as { token: string; user: UserProfile };
 }
 
 export async function apiRegister(name: string, email: string, password: string) {
@@ -27,29 +27,7 @@ export async function apiRegister(name: string, email: string, password: string)
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Registration failed");
-  return data as { token: string; user: UserProfile } | { requiresOtp: true; email: string };
-}
-
-export async function apiVerifyOtp(email: string, otp: string) {
-  const res = await fetch("/api/auth/verify-otp", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, otp }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Verification failed");
-  return data as { token: string; user: UserProfile };
-}
-
-export async function apiResendOtp(email: string) {
-  const res = await fetch("/api/auth/resend-otp", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Failed to resend OTP");
-  return data as { message: string };
+  return data as { token: string; user: UserProfile } | { pending: true; message: string };
 }
 
 export interface UserProfile {
