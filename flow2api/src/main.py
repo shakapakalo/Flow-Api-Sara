@@ -229,6 +229,12 @@ async def login_page():
     return serve_html(static_path / "login.html", "<h1>Login Page Not Found</h1>")
 
 
+@app.get("/manage/login", response_class=HTMLResponse)
+async def manage_login_page():
+    """Login page served under /manage prefix"""
+    return serve_html(static_path / "login.html", "<h1>Login Page Not Found</h1>")
+
+
 @app.get("/manage", response_class=HTMLResponse)
 async def manage_page():
     """Management console page"""
