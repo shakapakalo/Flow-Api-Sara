@@ -58,18 +58,13 @@ router.post("/auth/register", async (req, res) => {
       email: email.toLowerCase(),
       passwordHash,
       role: isFirstUser ? "admin" : "user",
-      status: isFirstUser ? "approved" : "pending",
+      status: "approved",
       emailVerified: true,
       plan: "free",
     }).returning();
 
-    if (isFirstUser) {
-      const token = signToken({ userId: user.id, email: user.email, role: user.role });
-      res.json({ token, user: formatUser(user) });
-      return;
-    }
-
-    res.json({ pending: true, message: "Registration successful! Waiting for admin approval." });
+    const token = signToken({ userId: user.id, email: user.email, role: user.role });
+    res.json({ token, user: formatUser(user) });
   } catch (err) {
     console.error("Register error:", err);
     res.status(500).json({ error: "Registration failed" });
