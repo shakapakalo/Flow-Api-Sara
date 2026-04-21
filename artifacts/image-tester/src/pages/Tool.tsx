@@ -510,13 +510,21 @@ export default function Tool() {
               <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">
                 {mode === "img2img" ? "Transform Prompt" : "Prompt Mode"}
               </label>
-              {mode !== "img2img" && isPaidPlan && (
+              {mode !== "img2img" && (
                 <div className="flex bg-zinc-800 rounded-md p-0.5">
                   <button onClick={() => setInputMode("single")}
                     className={`px-2.5 py-1 rounded text-xs font-medium transition-all ${inputMode === "single" ? "bg-zinc-700 text-white" : "text-zinc-500 hover:text-zinc-300"}`}>
                     Single
                   </button>
-                  <button onClick={() => setInputMode("bulk")}
+                  <button
+                    onClick={() => {
+                      if (!isPaidPlan) {
+                        setUpgradeReason("Bulk generation requires a paid plan. Upgrade to Starter or higher.");
+                        setShowUpgradeModal(true);
+                        return;
+                      }
+                      setInputMode("bulk");
+                    }}
                     className={`px-2.5 py-1 rounded text-xs font-medium transition-all ${inputMode === "bulk" ? "bg-violet-600 text-white" : "text-zinc-500 hover:text-zinc-300"}`}>
                     Bulk
                   </button>
