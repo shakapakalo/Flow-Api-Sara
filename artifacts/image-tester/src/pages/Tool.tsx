@@ -139,6 +139,19 @@ export default function Tool() {
   const anyLastFrame = Array.from(selected).some(supportsLastFrame);
   const anyInterpolation = Array.from(selected).some(isInterpolation);
 
+  const planId = (usage?.plan || (user as any)?.plan || "free") as string;
+  const isAdmin = user?.role === "admin";
+  const isPaidPlan = isAdmin || !["free"].includes(planId);
+  const isModelLocked = (id: string): boolean => {
+    if (isAdmin) return false;
+    if (!isPaidPlan) {
+      if (id.includes("_r2v_")) return true;
+      if (id.includes("_fl")) return true;
+      if (id.includes("_interpolation_")) return true;
+    }
+    return false;
+  };
+
   const WA_NUMBER = "923103508162";
   const waLink = (planName?: string) => {
     const msg = encodeURIComponent(`Hi! I want to upgrade my Flow by RSA plan${planName ? ` (currently on ${planName})` : ""}. Please help me.`);
@@ -497,8 +510,18 @@ export default function Tool() {
                     className={`px-2.5 py-1 rounded text-xs font-medium transition-all ${inputMode === "single" ? "bg-zinc-700 text-white" : "text-zinc-500 hover:text-zinc-300"}`}>
                     Single
                   </button>
-                  <button onClick={() => setInputMode("bulk")}
-                    className={`px-2.5 py-1 rounded text-xs font-medium transition-all ${inputMode === "bulk" ? "bg-violet-600 text-white" : "text-zinc-500 hover:text-zinc-300"}`}>
+                  <button
+                    onClick={() => {
+                      if (!isPaidPlan) {
+                        setUpgradeReason("Bulk generation requires a paid plan. Upgrade to Starter or higher.");
+                        setShowUpgradeModal(true);
+                        return;
+                      }
+                      setInputMode("bulk");
+                    }}
+                    title={!isPaidPlan ? "Requires paid plan" : ""}
+                    className={`px-2.5 py-1 rounded text-xs font-medium transition-all flex items-center gap-1 ${inputMode === "bulk" ? "bg-violet-600 text-white" : !isPaidPlan ? "text-zinc-600 cursor-not-allowed" : "text-zinc-500 hover:text-zinc-300"}`}>
+                    {!isPaidPlan && <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>}
                     Bulk
                   </button>
                 </div>
@@ -690,7 +713,7 @@ export default function Tool() {
             <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
               <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">Models</label>
               <div className="flex gap-1">
-                <button onClick={() => selectAll(filteredModels.map((m) => m.id))}
+                <button onClick={() => selectAll(filteredModels.filter((m) => !isModelLocked(m.id)).map((m) => m.id))}
                   className="text-xs text-violet-400 hover:text-violet-300 px-2 py-0.5 rounded hover:bg-violet-500/10 transition-colors">All</button>
                 <span className="text-zinc-700">·</span>
                 <button onClick={() => deselectAll(filteredModels.map((m) => m.id))}
@@ -772,16 +795,33 @@ export default function Tool() {
                 const family = groupFn(m);
                 const cc = colorMap[family] || colorMap.Other;
                 const isSelected = selected.has(m.id);
+                const locked = isModelLocked(m.id);
+                const lockLabel = m.id.includes("_r2v_") ? "Extend Video — paid plan" : "First & End Frame — paid plan";
                 return (
-                  <div key={m.id} onClick={() => toggle(m.id)}
-                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-all ${isSelected ? "bg-violet-600/20 border border-violet-600/40" : "hover:bg-zinc-800/60 border border-transparent"}`}>
-                    <div className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-all ${isSelected ? "bg-violet-600 border-violet-600" : "border-zinc-600"}`}>
-                      {isSelected && <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
+                  <div key={m.id}
+                    onClick={() => {
+                      if (locked) {
+                        setUpgradeReason(`${lockLabel}. Upgrade to Starter or higher to unlock.`);
+                        setShowUpgradeModal(true);
+                        return;
+                      }
+                      toggle(m.id);
+                    }}
+                    title={locked ? lockLabel : m.id}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all ${locked ? "opacity-45 cursor-not-allowed border border-transparent" : isSelected ? "bg-violet-600/20 border border-violet-600/40 cursor-pointer" : "hover:bg-zinc-800/60 border border-transparent cursor-pointer"}`}>
+                    <div className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-all ${locked ? "border-zinc-700 bg-zinc-800" : isSelected ? "bg-violet-600 border-violet-600" : "border-zinc-600"}`}>
+                      {locked
+                        ? <svg className="w-2.5 h-2.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        : isSelected && <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>
+                      }
                     </div>
-                    <span className="text-xs text-zinc-200 flex-1 leading-tight" title={m.id}>{shortName(m.id)}</span>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full border flex-shrink-0 ${cc}`}>
-                      {family.replace("Gemini ", "G").replace("→", "→").replace("Text→Video", "T2V").replace("Image→Video", "I2V").replace("Reference→Video", "R2V").replace("Interpolation", "Interp").replace("Imagen 4", "Img4")}
-                    </span>
+                    <span className={`text-xs flex-1 leading-tight ${locked ? "text-zinc-500" : "text-zinc-200"}`} title={m.id}>{shortName(m.id)}</span>
+                    {locked
+                      ? <span className="text-[9px] px-1.5 py-0.5 rounded-full border border-amber-700/50 bg-amber-900/30 text-amber-500 flex-shrink-0">UPGRADE</span>
+                      : <span className={`text-[10px] px-1.5 py-0.5 rounded-full border flex-shrink-0 ${cc}`}>
+                          {family.replace("Gemini ", "G").replace("→", "→").replace("Text→Video", "T2V").replace("Image→Video", "I2V").replace("Reference→Video", "R2V").replace("Interpolation", "Interp").replace("Imagen 4", "Img4")}
+                        </span>
+                    }
                   </div>
                 );
               })}
