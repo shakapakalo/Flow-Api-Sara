@@ -374,6 +374,7 @@ export default function Tool() {
   const successCount = results.filter((r) => r.status === "success").length;
   const loadingCount = results.filter((r) => r.status === "loading").length;
   const errorCount = results.filter((r) => r.status === "error").length;
+  const freeUserBusy = !isPaidPlan && (generating || loadingCount > 0);
 
   const prompts = inputMode === "bulk"
     ? bulkPrompts.split("\n").map((p) => p.trim()).filter(Boolean)
@@ -690,7 +691,7 @@ export default function Tool() {
 
             {/* Generate */}
             <button onClick={handleGenerate}
-              disabled={generating || selected.size === 0 || !prompt.trim() || (mode === "img2img" && refImages.length === 0)}
+              disabled={generating || freeUserBusy || selected.size === 0 || !prompt.trim() || (mode === "img2img" && refImages.length === 0)}
               className={`mt-3 w-full py-2.5 rounded-lg text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg ${mode === "img2img" ? "bg-gradient-to-r from-fuchsia-600 to-pink-600 hover:from-fuchsia-500 hover:to-pink-500 shadow-fuchsia-500/20" : "bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-violet-500/20"}`}>
               {generating ? (
                 <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Generating...</>
@@ -868,7 +869,7 @@ export default function Tool() {
           ) : (
             <div className="grid grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
               {results.map((r) => (
-                <ResultCard key={r.id} result={r} onRegenerate={regenerateOne} onDownload={downloadOne} />
+                <ResultCard key={r.id} result={r} onRegenerate={regenerateOne} onDownload={downloadOne} freeUserBusy={freeUserBusy} />
               ))}
             </div>
           )}
@@ -878,7 +879,7 @@ export default function Tool() {
   );
 }
 
-function ResultCard({ result, onRegenerate, onDownload }: { result: GenResult; onRegenerate: (r: GenResult) => void; onDownload: (r: GenResult) => void }) {
+function ResultCard({ result, onRegenerate, onDownload, freeUserBusy }: { result: GenResult; onRegenerate: (r: GenResult) => void; onDownload: (r: GenResult) => void; freeUserBusy?: boolean }) {
   const [expanded, setExpanded] = useState(false);
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 overflow-hidden flex flex-col">
@@ -940,8 +941,9 @@ function ResultCard({ result, onRegenerate, onDownload }: { result: GenResult; o
 
       {/* Card actions */}
       <div className="px-3 py-2 border-t border-zinc-800/60 flex gap-2">
-        <button onClick={() => onRegenerate(result)} disabled={result.status === "loading"}
-          className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs text-zinc-300 transition-colors disabled:opacity-40">
+        <button onClick={() => onRegenerate(result)} disabled={result.status === "loading" || freeUserBusy}
+          title={freeUserBusy ? "Wait for current generation to finish" : ""}
+          className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs text-zinc-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
           Retry
         </button>
