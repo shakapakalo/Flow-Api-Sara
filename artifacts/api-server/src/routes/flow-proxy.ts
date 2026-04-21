@@ -75,13 +75,19 @@ router.use("/flow-proxy", requireAuth, async (req: Request, res: Response) => {
     headers["content-length"] = Buffer.byteLength(bodyStr);
   }
 
+  // Video generation takes up to 25 minutes; image up to 5 minutes
+  const timeoutMs = mediaType === "video" ? 30 * 60 * 1000 : 6 * 60 * 1000;
+
   const options: http.RequestOptions = {
     hostname: "localhost",
     port: FLOW2API_PORT,
     path: subPath,
     method: req.method,
     headers,
+    timeout: timeoutMs,
   };
+
+  let timedOut = false;
 
   const proxyReq = http.request(options, (proxyRes) => {
     const status = proxyRes.statusCode || 200;
@@ -91,6 +97,7 @@ router.use("/flow-proxy", requireAuth, async (req: Request, res: Response) => {
     const chunks: Buffer[] = [];
     proxyRes.on("data", (chunk: Buffer) => chunks.push(chunk));
     proxyRes.on("end", async () => {
+      if (timedOut) return;
       const buf = Buffer.concat(chunks);
       res.end(buf);
 
@@ -117,8 +124,20 @@ router.use("/flow-proxy", requireAuth, async (req: Request, res: Response) => {
     });
   });
 
+  proxyReq.on("timeout", () => {
+    timedOut = true;
+    proxyReq.destroy();
+    const label = mediaType === "video" ? "Video" : "Image";
+    if (!res.headersSent) {
+      res.status(504).json({ error: `${label} generation timed out. Please try again.` });
+    }
+  });
+
   proxyReq.on("error", (err) => {
-    res.status(502).json({ error: "Flow2API unreachable", detail: err.message });
+    if (timedOut) return;
+    if (!res.headersSent) {
+      res.status(502).json({ error: "Flow2API unreachable", detail: err.message });
+    }
   });
 
   if (bodyStr) proxyReq.write(bodyStr);
