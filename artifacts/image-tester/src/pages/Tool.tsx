@@ -544,7 +544,16 @@ export default function Tool() {
                     {prompts.length}/50
                   </span>
                 </div>
-                <textarea value={bulkPrompts} onChange={(e) => setBulkPrompts(e.target.value)} rows={8}
+                <textarea value={bulkPrompts}
+                  onChange={(e) => setBulkPrompts(e.target.value)}
+                  onClick={() => {
+                    if (!isPaidPlan) {
+                      setUpgradeReason("Bulk generation requires a paid plan. Upgrade to Starter or higher.");
+                      setShowUpgradeModal(true);
+                    }
+                  }}
+                  readOnly={!isPaidPlan}
+                  rows={8}
                   placeholder={mode === "img2img"
                     ? "Make it a painting\nChange to night time\nAdd snow and winter"
                     : "A sunset over mountains\nA cat on a rooftop\nA futuristic city at night"}
