@@ -545,13 +545,16 @@ export default function Tool() {
                   </span>
                 </div>
                 <textarea value={bulkPrompts}
-                  onChange={(e) => setBulkPrompts(e.target.value)}
+                  onChange={(e) => { if (isPaidPlan) setBulkPrompts(e.target.value); }}
                   onClick={() => {
                     if (!isPaidPlan) {
                       setUpgradeReason("Bulk generation requires a paid plan. Upgrade to Starter or higher.");
                       setShowUpgradeModal(true);
                     }
                   }}
+                  onFocus={(e) => { if (!isPaidPlan) { e.target.blur(); setUpgradeReason("Bulk generation requires a paid plan. Upgrade to Starter or higher."); setShowUpgradeModal(true); } }}
+                  onPaste={(e) => { if (!isPaidPlan) { e.preventDefault(); setUpgradeReason("Bulk generation requires a paid plan. Upgrade to Starter or higher."); setShowUpgradeModal(true); } }}
+                  onKeyDown={(e) => { if (!isPaidPlan) { e.preventDefault(); } }}
                   readOnly={!isPaidPlan}
                   rows={8}
                   placeholder={mode === "img2img"
