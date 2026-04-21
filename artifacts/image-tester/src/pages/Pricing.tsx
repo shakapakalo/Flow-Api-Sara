@@ -266,7 +266,7 @@ export default function Pricing() {
           </div>
           {user && (
             <div className="ml-auto text-xs text-zinc-500">
-              Current plan: <span className="text-violet-400 font-semibold capitalize">{(user as any).planName || user.plan || "Free"}</span>
+              Current plan: <span className="text-violet-400 font-semibold capitalize">{((user as any).planName || user.plan || "free") === "free" ? "Promotion" : ((user as any).planName || user.plan)}</span>
             </div>
           )}
         </div>

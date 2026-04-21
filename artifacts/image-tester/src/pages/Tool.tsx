@@ -644,7 +644,7 @@ export default function Tool() {
             {usage && (
               <div className="mt-3 p-2.5 rounded-lg bg-zinc-800/60 border border-zinc-700/60 space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wide">{usage.planName} Plan</span>
+                  <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wide">{usage.planName === "Free" ? "Promotion" : usage.planName} Plan</span>
                   <span className="text-[10px] text-zinc-600">{usage.threads} thread{usage.threads !== 1 ? "s" : ""} max</span>
                 </div>
                 {[
