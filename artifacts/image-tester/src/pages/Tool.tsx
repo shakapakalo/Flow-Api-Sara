@@ -199,11 +199,12 @@ export default function Tool() {
   const handleMultiUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
-    files.slice(0, 50).forEach((file) => {
+    const maxImgs = isPaidPlan ? 50 : 1;
+    files.slice(0, maxImgs).forEach((file) => {
       const reader = new FileReader();
       reader.onload = (ev) => {
         const dataUrl = ev.target?.result as string;
-        setRefImages((prev) => prev.length < 50 ? [...prev, dataUrl] : prev);
+        setRefImages((prev) => prev.length < maxImgs ? [...prev, dataUrl] : prev);
       };
       reader.readAsDataURL(file);
     });
@@ -471,8 +472,8 @@ export default function Tool() {
                   </div>
                   <label className="text-xs font-semibold text-fuchsia-300 uppercase tracking-wide">Source Images <span className="text-fuchsia-600 normal-case font-normal">required</span></label>
                 </div>
-                <span className={`text-xs font-medium ${refImages.length >= 50 ? "text-red-400" : refImages.length > 0 ? "text-fuchsia-400" : "text-zinc-600"}`}>
-                  {refImages.length}/50
+                <span className={`text-xs font-medium ${refImages.length >= (isPaidPlan ? 50 : 1) ? "text-red-400" : refImages.length > 0 ? "text-fuchsia-400" : "text-zinc-600"}`}>
+                  {refImages.length}/{isPaidPlan ? 50 : 1}
                 </span>
               </div>
               {/* Thumbnails grid */}
@@ -488,12 +489,12 @@ export default function Tool() {
                   ))}
                 </div>
               )}
-              {refImages.length < 50 && (
+              {refImages.length < (isPaidPlan ? 50 : 1) && (
                 <button onClick={() => multiImgInputRef.current?.click()}
                   className="w-full py-4 rounded-lg border-2 border-dashed border-fuchsia-800/70 hover:border-fuchsia-500 text-xs text-zinc-500 hover:text-fuchsia-300 transition-colors flex flex-col items-center justify-center gap-1.5 bg-fuchsia-950/20">
                   <svg className="w-6 h-6 text-fuchsia-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4"/></svg>
                   <span>{refImages.length > 0 ? "Add more images" : "Click to upload images"}</span>
-                  <span className="text-[10px] text-zinc-600">PNG, JPG, WEBP • up to 50</span>
+                  <span className="text-[10px] text-zinc-600">PNG, JPG, WEBP • up to {isPaidPlan ? 50 : 1}</span>
                 </button>
               )}
               {refImages.length > 0 && (
