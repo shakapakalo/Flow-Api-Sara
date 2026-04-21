@@ -178,8 +178,13 @@ export default function Tool() {
   useEffect(() => { loadModels(); loadUsage(); }, [loadModels, loadUsage]);
   useEffect(() => { setSelected(new Set()); setFilterFamily("all"); setFilterSize("all"); setResults([]); setModelSearch(""); setRefImage(null); setRefImages([]); setLastFrame(null); }, [mode]);
 
-  const toggle = (id: string) =>
+  const toggle = (id: string) => {
+    if (!isPaidPlan) {
+      setSelected((p) => p.has(id) ? new Set() : new Set([id]));
+      return;
+    }
     setSelected((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  };
   const selectAll = (ids: string[]) => setSelected((p) => { const n = new Set(p); ids.forEach((id) => n.add(id)); return n; });
   const deselectAll = (ids: string[]) => setSelected((p) => { const n = new Set(p); ids.forEach((id) => n.delete(id)); return n; });
 
