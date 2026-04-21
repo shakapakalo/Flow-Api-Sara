@@ -177,6 +177,7 @@ export default function Tool() {
 
   useEffect(() => { loadModels(); loadUsage(); }, [loadModels, loadUsage]);
   useEffect(() => { setSelected(new Set()); setFilterFamily("all"); setFilterSize("all"); setResults([]); setModelSearch(""); setRefImage(null); setRefImages([]); setLastFrame(null); }, [mode]);
+  useEffect(() => { if (!isPaidPlan && inputMode === "bulk") setInputMode("single"); }, [isPaidPlan, inputMode]);
 
   const toggle = (id: string) => {
     if (!isPaidPlan) {
