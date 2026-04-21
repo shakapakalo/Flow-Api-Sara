@@ -16,22 +16,38 @@ function isVideoModel(modelId: string): boolean {
   return lower.includes("veo") || lower.includes("video") || lower.includes("sora") || lower.includes("kling") || lower.includes("wan") || lower.includes("hailuo") || lower.includes("luma") || lower.includes("minimax");
 }
 
-// Per-user queue for free plan — ensures 1 generation at a time per user
-// Maps userId → tail of the promise chain
+// Per-user queue — 1 generation at a time per account
 const freeUserQueue = new Map<number, Promise<void>>();
 
-function runInUserQueue(userId: number, fn: () => Promise<void>): Promise<void> {
-  const prev = freeUserQueue.get(userId) ?? Promise.resolve();
+// Per-IP queue — 1 generation at a time per IP (blocks multi-browser/multi-account spam)
+const freeIpQueue = new Map<string, Promise<void>>();
+
+function runInQueue<K>(map: Map<K, Promise<void>>, key: K, fn: () => Promise<void>): Promise<void> {
+  const prev = map.get(key) ?? Promise.resolve();
   const next = prev.then(() => fn()).catch(() => {});
-  freeUserQueue.set(userId, next);
-  // Clean up map entry once the chain is idle
-  next.then(() => {
-    if (freeUserQueue.get(userId) === next) freeUserQueue.delete(userId);
-  });
+  map.set(key, next);
+  next.then(() => { if (map.get(key) === next) map.delete(key); });
   return next;
 }
 
-// Returns queue depth (how many are waiting before this user)
+function getClientIp(req: Request): string {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (forwarded) {
+    const ip = Array.isArray(forwarded) ? forwarded[0] : forwarded.split(",")[0];
+    return ip.trim();
+  }
+  return req.socket?.remoteAddress || req.ip || "unknown";
+}
+
+// Chain through both user queue AND ip queue so same-IP multi-account spam is blocked
+function runInFreeQueue(userId: number, ip: string, fn: () => Promise<void>): Promise<void> {
+  // Outer: IP-level lock (prevents multiple accounts from same IP)
+  return runInQueue(freeIpQueue, ip, () =>
+    // Inner: user-level lock (preserves per-user ordering)
+    runInQueue(freeUserQueue, userId, fn)
+  );
+}
+
 function getQueueDepth(userId: number): number {
   return freeUserQueue.has(userId) ? 1 : 0;
 }
@@ -172,14 +188,14 @@ router.use("/flow-proxy", requireAuth, async (req: Request, res: Response) => {
         }
       }
 
-      // Free plan: queue — 1 generation at a time, unlimited count
+      // Free plan: queue — 1 generation at a time per user AND per IP
       if (isFree) {
+        const clientIp = getClientIp(req);
         const depth = getQueueDepth(user.id);
         if (depth > 0) {
-          // Tell client they're queued
           res.setHeader("X-Queue-Position", String(depth));
         }
-        await runInUserQueue(user.id, () =>
+        await runInFreeQueue(user.id, clientIp, () =>
           doProxy(req, res, mediaType, user.id, user.role, opType)
         );
         return;
