@@ -509,24 +509,14 @@ export default function Tool() {
               <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">
                 {mode === "img2img" ? "Transform Prompt" : "Prompt Mode"}
               </label>
-              {mode !== "img2img" && (
+              {mode !== "img2img" && isPaidPlan && (
                 <div className="flex bg-zinc-800 rounded-md p-0.5">
                   <button onClick={() => setInputMode("single")}
                     className={`px-2.5 py-1 rounded text-xs font-medium transition-all ${inputMode === "single" ? "bg-zinc-700 text-white" : "text-zinc-500 hover:text-zinc-300"}`}>
                     Single
                   </button>
-                  <button
-                    onClick={() => {
-                      if (!isPaidPlan) {
-                        setUpgradeReason("Bulk generation requires a paid plan. Upgrade to Starter or higher.");
-                        setShowUpgradeModal(true);
-                        return;
-                      }
-                      setInputMode("bulk");
-                    }}
-                    title={!isPaidPlan ? "Requires paid plan" : ""}
-                    className={`px-2.5 py-1 rounded text-xs font-medium transition-all flex items-center gap-1 ${inputMode === "bulk" ? "bg-violet-600 text-white" : !isPaidPlan ? "text-zinc-600 cursor-not-allowed" : "text-zinc-500 hover:text-zinc-300"}`}>
-                    {!isPaidPlan && <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>}
+                  <button onClick={() => setInputMode("bulk")}
+                    className={`px-2.5 py-1 rounded text-xs font-medium transition-all ${inputMode === "bulk" ? "bg-violet-600 text-white" : "text-zinc-500 hover:text-zinc-300"}`}>
                     Bulk
                   </button>
                 </div>
