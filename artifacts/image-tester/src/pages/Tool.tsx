@@ -359,10 +359,14 @@ export default function Tool() {
   const downloadOne = (r: GenResult) => {
     if (!r.mediaUrl) return;
     const ext = r.mediaType === "video" ? "mp4" : "jpg";
+    const filename = `${r.modelId.replace(/[^a-zA-Z0-9-]/g, "_")}.${ext}`;
+    const proxyUrl = `/api/proxy-download?url=${encodeURIComponent(r.mediaUrl)}&filename=${encodeURIComponent(filename)}`;
     const a = document.createElement("a");
-    a.href = r.mediaUrl;
-    a.download = `${r.modelId}.${ext}`;
+    a.href = proxyUrl;
+    a.download = filename;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
   };
 
   const handleBulkDownload = async () => {

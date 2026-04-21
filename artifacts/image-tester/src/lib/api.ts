@@ -207,7 +207,9 @@ export async function downloadAllAsZip(results: Array<{ modelId: string; promptT
         const base64 = r.mediaUrl.split(",")[1];
         folder.file(filename, base64, { base64: true });
       } else {
-        const response = await fetch(r.mediaUrl);
+        const proxyUrl = `/api/proxy-download?url=${encodeURIComponent(r.mediaUrl)}&filename=${encodeURIComponent(filename)}`;
+        const response = await fetch(proxyUrl);
+        if (!response.ok) throw new Error("proxy failed");
         const blob = await response.blob();
         folder.file(filename, blob);
       }
@@ -220,7 +222,9 @@ export async function downloadAllAsZip(results: Array<{ modelId: string; promptT
   const a = document.createElement("a");
   a.href = url;
   a.download = "flow-rsa-exports.zip";
+  document.body.appendChild(a);
   a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
   return count;
 }
