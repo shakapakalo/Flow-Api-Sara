@@ -517,15 +517,9 @@ export default function Tool() {
                     Single
                   </button>
                   <button
-                    onClick={() => {
-                      if (!isPaidPlan) {
-                        setUpgradeReason("Bulk generation requires a paid plan. Upgrade to Starter or higher.");
-                        setShowUpgradeModal(true);
-                        return;
-                      }
-                      setInputMode("bulk");
-                    }}
-                    className={`px-2.5 py-1 rounded text-xs font-medium transition-all ${inputMode === "bulk" ? "bg-violet-600 text-white" : "text-zinc-500 hover:text-zinc-300"}`}>
+                    onClick={() => isPaidPlan && setInputMode("bulk")}
+                    title={!isPaidPlan ? "Requires paid plan" : ""}
+                    className={`px-2.5 py-1 rounded text-xs font-medium transition-all ${inputMode === "bulk" ? "bg-violet-600 text-white" : !isPaidPlan ? "text-zinc-700 cursor-not-allowed" : "text-zinc-500 hover:text-zinc-300"}`}>
                     Bulk
                   </button>
                 </div>
